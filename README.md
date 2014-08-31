@@ -13,4 +13,4 @@ Rsync functionality was removed as well.
 
 You will need to configure the file before use, generally just to indicate source and destination folders, and which playlists to sync.
 
-The tool was only tested on linux, but in theory should work on any OS.
+The tool was only tested on linux, but in theory should work on any OS. 
