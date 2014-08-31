@@ -18,19 +18,23 @@ logging.basicConfig(level=logging.DEBUG) # filename='example.log',
 #  Rhythmbox uses some form of URI encoding that doesn't match what urllib.quote() gives you
 #  So until I can figure out how to reliably replicate their quoting scheme, this won't support special characters in the base paths
 
-logging.info("Beginning Sync")
+#define destination
+#Two subfolders will be created in this folder: Music, and Playlists.
+destination = '/run/media/decius/NOOT/'             
 
-# Need to be configured
-local_playlists = '/path/to/temporary/dir/'  #playlists are temporarily stored here (permanently if KEEP_LOCAL_PLAYLIST_EXPORT = true)
-destination_media = '/path/to/media/destination/'              #files are exported to this directory
-destination_playlists = '/path/to/playlist/destination/' #playlists with new paths are stored here 
+#pick playlists to sync
 skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated'] #Skip these playlists
-sync_playlists = [] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
+sync_playlists = [''] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
+
+local_playlists = '/home/decius/Desktop/temp'  #playlists are temporarily stored here (permanently if KEEP_LOCAL_PLAYLIST_EXPORT = true)
 
 
 KEEP_LOCAL_PLAYLIST_EXPORT = False
 PLAYLIST_FORMAT = 'M3U' # only M3U currently supported, See note about Rhythmbox URI encoding above which also pertains to PLS support
-rhythmbox_startup_wait = 15 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
+rhythmbox_startup_wait = 1 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
+destination_media = destination + 'Music/'
+destination_playlists = destination + 'Playlists/'
+
 
 
 def rhythmbox_playlists_export():
@@ -112,10 +116,9 @@ def sync_playlist_media():
         continue
       source_path = line.rstrip('\n')      
       fname = path_leaf(source_path)
-      dest_path = destination_media + fname #path that file will have in destination
       
       #add converted path to new playlist
-      playlist_text_out.append(dest_path + '\n') 
+      playlist_text_out.append('../Music/' + fname + '\n') 
       
       #copy file to destination!
       cmd = 'cp -u \"%s\" \"%s\"' % (source_path, destination_media)
