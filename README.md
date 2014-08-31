@@ -1,12 +1,11 @@
-Rhythmbox-Playlists-Export
+Rhythmbox-Playlists-To-MediaPlayer
 ==========================
 
-Author: Kyle Dickerson <kyle.dickerson@gmail.com>
+A tool to sync the songs in your rhythmbox playlists, and the playlists themselves, to a separate directory (e.g., a media player or cellphone).
 
-Use DBus to export smart and dumb playlists to standard playlist files (M3U).
+Author: Bram Van Rensbergen <mail@bramvanrensbergen.com>
 
-Also use to sync rhythmbox and associated media to another machine.  
-Also use to sync the exported playlists to another machine.  
-Both of these activities involve modifying the paths of files so they point to the correct new location on the other machine.
 
-I'm using this to sync rhythmbox between my wife's laptop and our server and to export her playlists to M3U so we can play them in XBMC and our Squeezebox Radio.
+This tool is based on Kyle Dickerson's <a href = "https://github.com/kdickerson/Rhythmbox-Playlists-Export">Rhythmbox-Playlists-Export</a>. 
+
+The most important change is that ONLY files contained in the playlists you are syncing, are copied; other local media files are ignored. Rsync functionality was removed as well.

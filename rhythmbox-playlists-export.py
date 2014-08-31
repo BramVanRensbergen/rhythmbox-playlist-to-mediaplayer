@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 
-# Author: Kyle Dickerson
-# email: kyle.dickerson@gmail.com
-# date: June 14, 2012
+# Author: Bram Van Rensbergen
+# email: mail@bramvanrensbergen.com
+# last modified: August, 2014
 
 import dbus
 import os
@@ -17,34 +17,26 @@ logging.basicConfig(level=logging.DEBUG) # filename='example.log',
 #  Rhythmbox uses some form of URI encoding that doesn't match what urllib.quote() gives you
 #  So until I can figure out how to reliably replicate their quoting scheme, this won't support special characters in the base paths
 
+logging.info("Beginning Sync")
+
 # Need to be configured
-local_username = 'jessica'
-local_media = ["/home/%s/%s" % (local_username, x) for x in ["Music", "Audiobooks", "Podcasts"]]
-local_playlists = '/tmp/rhythmbox_sync'
-remote_username = 'kyle'
-remote_host = "192.168.1.15" # Assumes passwordless SSH authentication available, uses rsync+ssh to move files
-remote_media = "/mnt/Music/Music/Jess"
-remote_playlists = '/mnt/Music/Playlists'
+local_username = 'decius'
+local_media = ["/media/media/Music"] #["/home/%s/%s" % (local_username, x) for x in ["Music", "Audiobooks", "Podcasts"]]
+local_playlists = '/home/decius/music_sync/temp' #'/tmp/rhythmbox_sync'
+remote_media = "/home/decius/music_sync/'"
+remote_playlists = '/home/decius/music_sync/playlists/'
 
 EXPORT_PLAYLISTS = True
-KEEP_LOCAL_PLAYLIST_EXPORT = False
+KEEP_LOCAL_PLAYLIST_EXPORT = True
 PLAYLIST_FORMAT = 'M3U' # only M3U currently supported, See note about Rhythmbox URI encoding above which also pertains to PLS support
-SYNC_RHYTHMBOX = False
-SYNC_MEDIA = True
 SYNC_PLAYLISTS = True
-DRY_RUN = True # Don't actually rsync anything
+DRY_RUN = False # Don't actually rsync anything
 
 # Probably correct from above configuration
 local_media_bases = [x[:x.rfind('/')] for x in local_media]
-local_rhythmbox = "/home/%s/.local/share/rhythmbox" % (local_username)
-local_coverart = "/home/%s/.cache/rhythmbox/covers" % (local_username)
-remote_rhythmbox = "/home/%s/.local/share/rhythmbox" % (remote_username)
-remote_coverart = "/home/%s/.cache/rhythmbox/covers" % (remote_username)
-rhythmdb_filename = 'rhythmdb.xml'
-playlists_filename = 'playlists.xml'
-rhythmbox_startup_wait = 15 # seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
+rhythmbox_startup_wait = 15 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
 rhythmbox_shutdown_wait = 3 # seconds
-skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated']
+skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated', 'check', 'cd']
 
 if not os.path.exists(local_playlists):
   logging.info("Creating directory for local export")
@@ -77,58 +69,6 @@ def export_playlists():
         logging.error("%s:%s" % (ex.get_dbus_name(), ex.get_dbus_message()))
         break
 
-def sync_rhythmbox():
-  logging.info("Syncing Rhythmbox data...")
-  elementTree = ElementTree()
-  elementDB = elementTree.parse("%s/%s" % (local_rhythmbox, rhythmdb_filename))
-  # Process all entry -> location entries
-  logging.debug("Processing rhythmdb.xml to update file paths")
-  for entry in elementDB.iter('entry'):
-    loc = entry.find('location')
-    if not loc.text.startswith('file://'): continue
-    success = False
-    for media_loc in local_media_bases:
-      if loc.text.find(media_loc) > -1:
-        loc.text = loc.text.replace(media_loc, remote_media)
-        success = True        
-        break
-    if not success:
-      logging.error("Couldn't figure out how to modify file location for remote use: %s" % (loc.text))
-  elementTree.write("%s/%s" % (local_playlists, rhythmdb_filename))
-
-  element = elementTree.parse("%s/%s" % (local_rhythmbox, playlists_filename))
-  # Process all playlist -> location entries
-  logging.debug("Processing playlists.xml to update file paths")
-  for playlist in element.iter('playlist'):
-    for loc in playlist.iter('location'):
-      success = False
-      for media_loc in local_media_bases:
-        if loc.text.find(media_loc) > -1:
-          loc.text = loc.text.replace(media_loc, remote_media)
-          success = True          
-          break
-      if not success:
-        logging.error("Couldn't figure out how to modify file location for remote use: %s" % (loc.text))
-  elementTree.write("%s/%s" % (local_playlists, playlists_filename))
-  logging.debug("Using rsync to copy xml files")
-  if not DRY_RUN:
-    cmd = 'rsync -vrlptgz -e ssh "%s/"*.xml "%s@%s:%s" --delete-excluded' % (local_playlists, remote_username, remote_host, remote_rhythmbox)
-    logging.debug('Executing: %s' % (cmd))
-    os.system(cmd)
-    
-    cmd = 'rsync -vrlptgz -e ssh "%s/" "%s@%s:%s" --delete-excluded' % (local_coverart, remote_username, remote_host, remote_coverart)
-    logging.debug('Executing: %s' % (cmd))
-    os.system(cmd)
-
-
-def sync_media():
-  logging.info("Syncing media files...")
-  if not DRY_RUN:
-    for media_loc in local_media:
-      cmd = 'rsync -vrlptgz --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r -e ssh "%s" "%s@%s:%s/" --delete-excluded' % (media_loc, remote_username, remote_host, remote_media)
-      logging.debug('Executing: %s' % (cmd))
-      os.system(cmd)
-
 
 def sync_playlists():
   logging.info("Syncing playlists...")
@@ -148,6 +88,10 @@ def sync_playlists():
       for media_loc in local_media_bases:
         if line.find(media_loc) > -1:
           playlist_text_out.append(line.replace(media_loc, remote_media))
+          cmd = 'cp -uv \"%s\" \"%s\"' % (line.rstrip('\n'), remote_media)
+         # logging.debug('Executing: %s' % (cmd))
+          os.system(cmd)
+          #logging.debug(line)
           success = True
           break
       if not success:
@@ -156,9 +100,9 @@ def sync_playlists():
     playlist_out.writelines(playlist_text_out)
     playlist_out.close()
   if not DRY_RUN:
-    cmd = 'rsync -vrlptgz -e ssh "%s/"*.%s "%s@%s:%s" --delete-excluded' % (alterred_playlists, PLAYLIST_FORMAT.lower(), remote_username, remote_host, remote_playlists)
+    cmd = 'rsync -vrlptgz -e ssh "%s/"*.%s "%s@%s:%s" --delete-excluded' % (alterred_playlists, PLAYLIST_FORMAT.lower(), "ab", "cd", remote_playlists)
     logging.debug('Executing: %s' % (cmd))
-    os.system(cmd)
+    #os.system(cmd)
 
 
 if EXPORT_PLAYLISTS:
@@ -166,17 +110,6 @@ if EXPORT_PLAYLISTS:
   logging.info('Pausing %d seconds for Rhythmbox initialization' % (rhythmbox_startup_wait))
   time.sleep(rhythmbox_startup_wait) # rhythmbox isn't ready until shortly after rhythmbox-client returns
   export_playlists()
-
-if SYNC_RHYTHMBOX:
-  # can't quit from DBus?
-  time.sleep(1)
-  os.system('rhythmbox-client --quit')
-  logging.info('Pausing %d seconds for Rhythmbox shutdown' % (rhythmbox_shutdown_wait))
-  time.sleep(rhythmbox_shutdown_wait)
-  sync_rhythmbox()
-
-if SYNC_MEDIA:
-  sync_media()
 
 if SYNC_PLAYLISTS:
   sync_playlists()
