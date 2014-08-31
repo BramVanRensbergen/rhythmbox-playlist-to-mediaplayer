@@ -11,6 +11,6 @@ This tool is based on Kyle Dickerson's <a href = "https://github.com/kdickerson/
 Most code in this project is his. The most important change is that ONLY files contained in the playlists you are syncing are copied; other local media files are ignored. 
 Rsync functionality was removed as well.
 
-You will need to configure the file before use, generally just to indicate source and destination folders, and which playlists to sync.
+You will need to configure the file before use, generally just to indicate destination folders and which playlists to sync.
 
 The tool was only tested on linux, but in theory should work on any OS. 
