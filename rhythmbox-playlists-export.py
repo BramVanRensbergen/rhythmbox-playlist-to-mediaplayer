@@ -23,19 +23,16 @@ logging.basicConfig(level=logging.DEBUG) # filename='example.log',
 destination = '/run/media/decius/NOOT/'             
 
 #pick playlists to sync
-skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated'] #Skip these playlists
-sync_playlists = [''] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
+skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated', 'check', 'cd'] #Skip these playlists
+sync_playlists = [] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
 
 local_playlists = '/home/decius/Desktop/temp'  #playlists are temporarily stored here (permanently if KEEP_LOCAL_PLAYLIST_EXPORT = true)
-
 
 KEEP_LOCAL_PLAYLIST_EXPORT = False
 PLAYLIST_FORMAT = 'M3U' # only M3U currently supported, See note about Rhythmbox URI encoding above which also pertains to PLS support
 rhythmbox_startup_wait = 15 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
 destination_media = destination + 'Music/'
 destination_playlists = destination + 'Playlists/'
-
-
 
 def rhythmbox_playlists_export():
     #create folders if necessary
