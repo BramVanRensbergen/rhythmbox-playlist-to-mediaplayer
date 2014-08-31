@@ -21,16 +21,16 @@ logging.basicConfig(level=logging.DEBUG) # filename='example.log',
 logging.info("Beginning Sync")
 
 # Need to be configured
-local_playlists = '/home/decius/Desktop/music/temp_playlists'  #playlists are temporarily stored here (permanently if KEEP_LOCAL_PLAYLIST_EXPORT = true)
-destination_media = "/home/decius/Desktop/music/"              #files are exported to this directory
-destination_playlists = '/home/decius/Desktop/music/Playlists' #playlists with new paths are stored here 
-skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated', 'check'] #Skip these playlists
-sync_playlists = ['altrock', 'chill'] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
+local_playlists = '/path/to/temporary/dir/'  #playlists are temporarily stored here (permanently if KEEP_LOCAL_PLAYLIST_EXPORT = true)
+destination_media = '/path/to/media/destination/'              #files are exported to this directory
+destination_playlists = '/path/to/playlist/destination/' #playlists with new paths are stored here 
+skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated'] #Skip these playlists
+sync_playlists = [] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
 
 
 KEEP_LOCAL_PLAYLIST_EXPORT = False
 PLAYLIST_FORMAT = 'M3U' # only M3U currently supported, See note about Rhythmbox URI encoding above which also pertains to PLS support
-rhythmbox_startup_wait = 1 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
+rhythmbox_startup_wait = 15 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
 
 
 def rhythmbox_playlists_export():
