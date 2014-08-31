@@ -28,7 +28,7 @@ skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated', 'check'] 
 sync_playlists = ['altrock', 'chill'] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
 
 
-KEEP_LOCAL_PLAYLIST_EXPORT = True
+KEEP_LOCAL_PLAYLIST_EXPORT = False
 PLAYLIST_FORMAT = 'M3U' # only M3U currently supported, See note about Rhythmbox URI encoding above which also pertains to PLS support
 rhythmbox_startup_wait = 1 #15 seconds, if Rhythmbox hasn't finished initializing the exports won't work (haven't found a programmatic way to check this)
 
