@@ -14,3 +14,6 @@ you are syncing) to a local folder (likely a mounted cell phone or other media p
 You will need to configure the file before use, generally just to indicate destination folders and which playlists to sync.
 
 The tool was only tested on linux, but in theory should work on any OS. 
+
+Known issues:
+* All files are placed in a single folder, so all songs should have unique filenames; when there are multiple songs with the same filename, only one is used.
