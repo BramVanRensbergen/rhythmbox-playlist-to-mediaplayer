@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 
 # Author: Bram Van Rensbergen
+# Based on Kyle Dickerson's Rhythmbox-Playlists-Export (https://github.com/kdickerson/Rhythmbox-Playlists-Export)
 # email: mail@bramvanrensbergen.com
-# last modified: August, 2014
+# Source: https://github.com/BramVanRensbergen/Rhythmbox-Playlists-To-MediaPlayer
+# last modified: September, 2014
 
 import dbus
 import os
@@ -20,10 +22,10 @@ logging.basicConfig(level=logging.DEBUG) # filename='example.log',
 
 #define destination
 #Two subfolders will be created in this folder: Music, and Playlists.
-destination = '/run/media/decius/NOOT/'             
+destination = '/home/decius/Desktop/music/' #'/run/media/decius/NOOT/'             
 
 #pick playlists to sync
-skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated', 'check', 'cd'] #Skip these playlists
+skip_playlists = ['Recently Added', 'Recently Played', 'My Top Rated'] #Skip these playlists
 sync_playlists = [] #ONLY sync these playlists; if this is empty, sync ALL playlists except those in skip_playlists
 
 local_playlists = '/home/decius/Desktop/temp'  #playlists are temporarily stored here (permanently if KEEP_LOCAL_PLAYLIST_EXPORT = true)
