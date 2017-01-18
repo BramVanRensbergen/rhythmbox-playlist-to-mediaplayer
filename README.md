@@ -1,4 +1,4 @@
-Rhythmbox-Playlists-To-MediaPlayer
+Rhythmbox-Playlist-To-MediaPlayer
 ==========================
 Author: Bram Van Rensbergen <mail@bramvanrensbergen.com>
 
