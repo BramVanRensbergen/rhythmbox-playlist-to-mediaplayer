@@ -13,4 +13,4 @@ This tool is based on Kyle Dickerson's <a href = "https://github.com/kdickerson/
 which is intended to sync an entire media library to a different computer (using ssh). I repurposed his code to sync part of a media library (only files contained in the playlists
 you are syncing) to a local folder (likely a connected cell phone or other media player).
 
-The tool was only tested on linux, but in theory should work on any OS. 
+The tool is designed for Linux and requires python3 (and optionally sox, if you wish to export flac files as mp3). To sync with an Android device mounted as gvfs, rsync is required as well.
