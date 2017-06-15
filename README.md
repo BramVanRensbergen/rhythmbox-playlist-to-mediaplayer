@@ -13,4 +13,12 @@ This tool is based on Kyle Dickerson's <a href = "https://github.com/kdickerson/
 which is intended to sync an entire media library to a different computer (using ssh). I repurposed his code to sync part of a media library (only files contained in the playlists
 you are syncing) to a local folder (likely a connected cell phone or other media player).
 
-The tool is designed for Linux and requires python3 (and optionally sox, if you wish to export flac files as mp3). To sync with an Android device mounted as gvfs, rsync is required as well.
+The tool is designed for Linux and requires python3 (and optionally sox, if you wish to export flac files as mp3). 
+
+
+When syncing a gvfs-mounted device (e.g., Android), use of the script is somewhat more complicated, (because gvfs-mounted filesystems do not allow the 'touch' command, which is used to keep track of which files were just synced, so that, if the option is enabled, any other music files can be removed). Instructions:
+	- make sure rsync is installed
+    - mount your device with gvfs (for Android, make sure to toggle the option 'Transfer files' on your device, then mount the filesystem e.g. through Nautilus)
+    - set a local TARGET_DIR (i.e. on your pc, not on your device) in the configuration file
+    - optional: if you have more than one gvfs device mounted, set the path to the device you wish to sync under EXTERNAL_RSYNC_DIR    
+    - your music will first be exported to the local directory, then synced with rsync with your device
