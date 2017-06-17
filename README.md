@@ -5,7 +5,7 @@ Author: Bram Van Rensbergen <mail@bramvanrensbergen.com>
 A tool to export rhythmbox playlists and their songs. 
 You select a number of playlists; all songs in these playlist are copied, and the playlists are duplicated, modified to refer to the new files, and copied as well.
 
-Primary goal: to sync part of your audio library to an external media player (cell phone, rockbox ipod, ...).
+Primary goal: to sync part of your audio library to an external media player (cell phone, rockbox ipod, ...), either mounted locally or over ssh.
 
 I created this for personal use, but anyone is free to use it. You will need to configure the file before use, such as to indicate destination folders and which playlists to sync.
 
