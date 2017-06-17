@@ -8,9 +8,6 @@
 # to run: 
 # python /home/decius/Dropbox/apps/programs/rhythmbox-playlist-to-mediaplayer/rhythmbox-playlists-export.py
 
-# Todo: work with arguments, remove presets
-
-# rsync --verbose --progress --omit-dir-times --no-perms --recursive --inplace --ignore-existing -e "ssh -p 2222" /media/Alexis/Data/Backup/AndroidMusicCopy/ decius@192.168.2.26:/data/data/com.arachnoid.sshelper/home/SDCard/
 
 
 
@@ -25,16 +22,15 @@ from xml.etree.ElementTree import Element, ElementTree
 from os import path
 import subprocess
 import logging
+from test.test_dbm_dumb import _fname
 logging.basicConfig(level=logging.DEBUG) 
 
-PRESET = 'Android'	# Android CarPlaylist CarCD
-
+# rather than changing all user options separately, you may switch to a preset which contains a set of default values for some of these variables
+PRESET = 'CarPlaylist'	# Android CarPlaylist CarCD
 
 CONVERT_FLAC_TO_MP3 = True	# True: convert all flac files to mp3; requires 'sox' to be installed'; False: flac files are handled just like mp3 files
 
 REMOVE_OLD_FILES = True	# True: all files not just synced are deleted from TARGET_DIR, and empty directories are removed. Use with caution!
-
-# The following are overwritten by PRESET values
 
 # location on current station where files are stored
 TARGET_DIR = None 
@@ -47,12 +43,16 @@ MUSIC_DIR = None
 # if left at none, playlist files are not synchronized
 PLAYLIST_DIR = None 
 
-# True: a folder is created for the files of each of the playlists indicated above
-# False: no subfolder is created per playlist.	If	MAINTAIN_SOURCE_DIR_STRUCTURE == False, this means all files end up in one big directory. 
-EACH_PLAYLIST_IN_SEPARATE_DIR = None
-	
 # True: keep the directory structure of the source media, e.g. maintain (sub)folders
+# Usually either this is true and EACH_PLAYLIST_IN_SEPARATE_DIR is false, or the other way around (these are the only scenarios that were tested)
 MAINTAIN_SOURCE_DIR_STRUCTURE = None
+
+# True: a folder is created for the files of each of the playlists indicated above (this means duplicates will be created for files that exist in multiple exported playlists)
+# False: no subfolder is created per playlist.	If	MAINTAIN_SOURCE_DIR_STRUCTURE == False, this means all files end up in one big directory. 
+# Usually either this is true and MAINTAIN_SOURCE_DIR_STRUCTURE is false, or the other way around (these are the only scenarios that were tested)
+EACH_PLAYLIST_IN_SEPARATE_DIR = None
+RENAME_BASED_ON_INDEX_IN_PLAYLIST = True # True: prefix all files based with their index in their playlist. Only used (because only plausible) if EACH_PLAYLIST_IN_SEPARATE_DIR is true
+	
 
 # If this is set, after RB playlists are synced to TARGET_DIR, rsync is used to sync TARGET_DIR with EXTERNAL_RSYNC_DIR (following the same folder structure, so music files are placed in EXTERNAL_RSYNC_DIR/MUSIC_DIR)
 # You can rsync to any locally mounted folder, or over ssh (just edit RSYNC_COMMAND) 
@@ -155,7 +155,7 @@ def export_playlists():
 	session_bus = dbus.SessionBus()
 	playlist_manager = session_bus.get_object('org.gnome.Rhythmbox3', '/org/gnome/Rhythmbox3/PlaylistManager')
 	asM3U = (PLAYLIST_FORMAT == 'M3U')
-	
+		
 	for playlist_name in playlist_manager.GetPlaylists(dbus_interface='org.gnome.Rhythmbox3.PlaylistManager'):			
 		sync_this = True # check whether we have to sync this playlist!
 		if len(SYNC_PLAYLISTS) > 0 and not playlist_name in SYNC_PLAYLISTS: 
@@ -173,7 +173,6 @@ def export_playlists():
 		logging.info("Exporting '%s' to '%s'" % (playlist_name, filename))
 		try:
 			fileURI = 'file://%s' % (os.path.join(temporary_playlist_dir, filename))
-			logging.debug("URI: %s" % (fileURI))
 				
 			playlist_manager.ExportPlaylist(playlist_name, fileURI, asM3U, dbus_interface='org.gnome.Rhythmbox3.PlaylistManager')
 		except dbus.exceptions.DBusException as ex:
@@ -218,46 +217,57 @@ def sync_playlist_media():
 					paths.append(line)
 			prefix = path.dirname(path.commonprefix(paths)) + os.sep
 			# logging.info('prefix: %s' % (prefix))
+				
+		n_songs = int(len(playlist_text) / 2) + 1 # usually one comment line per song
+		n_songs_digits = len(str(n_songs)) # used to pre-pad index with zero's
+		index_in_playlist = 0
 		
 		for line in playlist_text:
 			if line.startswith('#'):
 				playlist_text_out.append(line)	# copy comment lines as is
 				continue
-			source_path = line.rstrip('\n')		
-			fname = path_leaf(source_path)
+			source_absolute_path = line.rstrip('\n')		
+			fname = path_leaf(source_absolute_path)
+			
+			if RENAME_BASED_ON_INDEX_IN_PLAYLIST and EACH_PLAYLIST_IN_SEPARATE_DIR:
+				index_in_playlist += 1
+				index_prefix = str(index_in_playlist).zfill(n_songs_digits)
+				fname = index_prefix + ' ' + fname
 			
 			if MAINTAIN_SOURCE_DIR_STRUCTURE:
-				destination_subdirs = source_path.replace(prefix, '').replace(fname, '')
-				destination_path = os.path.join(destination_base, destination_subdirs)
+				destination_subdirs = source_absolute_path.replace(prefix, '').replace(fname, '')
+				destination_dir = os.path.join(destination_base, destination_subdirs)
 				
-				if not os.path.exists(destination_path):
+				if not os.path.exists(destination_dir):
 					logging.info("Creating folder(s) %s" % (destination_subdirs))
-					os.makedirs(destination_path)
+					os.makedirs(destination_dir)
 				playlist_line_prefix = os.path.join(playlist_line_base, destination_subdirs)
 				
 			else:
-				destination_path = destination_base
+				destination_dir = destination_base
 				playlist_line_prefix = playlist_line_base
 			
 			touch_existing = False;	# if target file already exists, we'll touch it so we can keep track of what files are synced in this run, so we can remove any older files if needed
-			
-			
+						
 			if CONVERT_FLAC_TO_MP3 and fname.endswith('.flac'):	# file is flac, and we should convert it to mp3 
 				fname = fname.replace('.flac', '.mp3')
+				destination_absolute_path = os.path.join(destination_dir, fname)
 				
-				if not os.path.isfile(os.path.join(destination_path, fname.replace('.flac', '.mp3'))):	
-					run_cmd('sox \"%s\" \"%s\"' % (source_path, os.path.join(destination_path, fname)))	# use sox to convert the source flac, and save it as mp3 to destionation dir
+				if not os.path.isfile(destination_absolute_path):	
+					run_cmd('sox \"%s\" \"%s\"' % (source_absolute_path, destination_absolute_path))	# use sox to convert the source flac, and save it as mp3 to destionation dir
 				else:
 					touch_existing = True
 					
 			else:	# file is not flac i.e. likely mp3	
-				if not os.path.isfile(os.path.join(destination_path, fname)):
-					run_cmd('cp \"%s\" \"%s\"' % (source_path, destination_path))	# copy file to destination!
+				destination_absolute_path = os.path.join(destination_dir, fname)
+				
+				if not os.path.isfile(destination_absolute_path):
+					run_cmd('cp \"%s\" \"%s\"' % (source_absolute_path, destination_absolute_path))	# copy file to destination!
 				else:
 					touch_existing = True
 			
 			if touch_existing and REMOVE_OLD_FILES:
-				run_cmd('touch \"%s\"' % (os.path.join(destination_path, fname)))	# touch existing file, so we know we should keep it
+				run_cmd('touch \"%s\"' % destination_absolute_path)	# touch existing file, so we know we should keep it
 			
 			# add path to new playlist
 			playlist_text_out.append(os.path.join(playlist_line_prefix, fname) + '\n')
