@@ -26,7 +26,7 @@ from test.test_dbm_dumb import _fname
 logging.basicConfig(level=logging.DEBUG) 
 
 # rather than changing all user options separately, you may switch to a preset which contains a set of default values for some of these variables
-PRESET = 'CarPlaylist'	# Android CarPlaylist CarCD
+PRESET = 'Android'	# Android CarPlaylist CarCD
 
 CONVERT_FLAC_TO_MP3 = True	# True: convert all flac files to mp3; requires 'sox' to be installed'; False: flac files are handled just like mp3 files
 
@@ -59,7 +59,8 @@ RENAME_BASED_ON_INDEX_IN_PLAYLIST = True # True: prefix all files based with the
 # when using ssh, make sure MUSIC_DIR and	PLAYLIST_DIR already exist in EXTERNAL_RSYNC_DIR
 SYNC_TARGET_TO_RSYNC = False
 
-RSYNC_COMMAND = "rsync --verbose --progress --omit-dir-times --no-perms --recursive --inplace --ignore-existing -e \"ssh -p 2222\" %s decius@192.168.2.26:%s"	# first '%s' will be replaced with TARGET_DIR, second one with EXTERNAL_RSYNC_DIR
+RSYNC_COMMAND = "rsync --verbose --progress --delete --omit-dir-times --no-perms --recursive --inplace --ignore-existing -e \"ssh -p 2222\" %s %s decius@192.168.2.26:%s"	
+# first '%s' will be replaced with TARGET_DIR + MUSIC_DIR, second one with TARGET_DIR + PLAYLIST_DIR, final one with EXTERNAL_RSYNC_DIR
 
 # If SYNC_TARGET_TO_RSYNC is true, TARGET_DIR will be synced to this folder 
 # You can set this directly, or, if you have mounted a single device using gvfs, look up the path at runtime
@@ -127,10 +128,7 @@ def rhythmbox_playlist_export():
 		
 	# copy all files in those playlists to destination dir, and export edited version of the playlists refering to the new source	
 	sync_playlist_media()
-	
-	run_external_rsync_if_needed()
-		
-	# cleanup	
+			
 	if REMOVE_OLD_FILES:
 		logging.info("Removing all files in %s with last modified date before start of the script as well as all empty directories" % TARGET_DIR)
 		
@@ -143,7 +141,10 @@ def rhythmbox_playlist_export():
 				fullpath = os.path.join(root, subdir)
 				if len(os.listdir(fullpath)) == 0:					
 					run_cmd('rm -d \"%s\"' % fullpath)
-					
+		
+	run_external_rsync_if_needed()
+
+			
 	if temporary_playlist_dir is not None:
 		logging.info("Removing temporary playlist directory")
 		run_cmd('rm -rf %s' % (temporary_playlist_dir))
@@ -322,7 +323,7 @@ def run_external_rsync_if_needed():
 		os.makedirs(os.path.join(EXTERNAL_RSYNC_DIR, PLAYLIST_DIR))
 		
 	# sync both music and playlists folder
-	cmd = RSYNC_COMMAND % (os.path.join(TARGET_DIR), os.path.join(EXTERNAL_RSYNC_DIR))
+	cmd = RSYNC_COMMAND % (os.path.join(TARGET_DIR, MUSIC_DIR).rstrip('/'), os.path.join(TARGET_DIR, PLAYLIST_DIR).rstrip('/'), os.path.join(EXTERNAL_RSYNC_DIR))
 	run_cmd(cmd)	
 
 # gvfs devices are mounted under /run/user/$UID/gvfs/
