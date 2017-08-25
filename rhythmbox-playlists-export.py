@@ -59,7 +59,7 @@ RENAME_BASED_ON_INDEX_IN_PLAYLIST = True # True: prefix all files based with the
 # when using ssh, make sure MUSIC_DIR and	PLAYLIST_DIR already exist in EXTERNAL_RSYNC_DIR
 SYNC_TARGET_TO_RSYNC = False
 
-RSYNC_COMMAND = "rsync --verbose --progress --delete --omit-dir-times --no-perms --recursive --inplace --ignore-existing -e \"ssh -p 2222\" %s %s decius@192.168.2.26:%s"	
+RSYNC_COMMAND = "rsync --verbose --progress --delete --omit-dir-times --no-perms --recursive --inplace --size-only -e \"ssh -p 2222\" %s %s decius@192.168.2.26:%s"	
 # first '%s' will be replaced with TARGET_DIR + MUSIC_DIR, second one with TARGET_DIR + PLAYLIST_DIR, final one with EXTERNAL_RSYNC_DIR
 
 # If SYNC_TARGET_TO_RSYNC is true, TARGET_DIR will be synced to this folder 
